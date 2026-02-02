@@ -1,7 +1,11 @@
 package com.example;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
 public class Vertex {
-    private int x, y;
+    public final int x, y;
 
     public Vertex(int x, int y) {
         this.x = x;
@@ -28,4 +32,17 @@ public class Vertex {
         return String.format("(%d,%d)", x, y);
     }
 
+    public Vertex add(Vertex oth) {
+        return new Vertex(x + oth.x, y + oth.y);
+    }
+
+    public List<Vertex> getNeighbors(Predicate<Vertex> fn) {
+        List<Vertex> neighbors = new ArrayList<>();
+        for (int[] dir : Utility.DIRS) {
+            Vertex curr = new Vertex(x + dir[0], y + dir[1]);
+            if (fn.test(curr))
+                neighbors.add(curr);
+        }
+        return neighbors;
+    }
 }
