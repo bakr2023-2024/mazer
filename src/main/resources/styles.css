@@ -1,0 +1,10 @@
+VBox {
+  -fx-background-color: black;
+}
+ChoiceBox .label {
+  -fx-text-fill: black;
+}
+Label {
+  -fx-text-fill: white;
+  -fx-text-alignment: center;
+}
