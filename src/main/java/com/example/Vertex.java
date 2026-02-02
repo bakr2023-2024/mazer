@@ -36,6 +36,9 @@ public class Vertex {
         return new Vertex(x + oth.x, y + oth.y);
     }
 
+    public Vertex add(int x, int y) {
+        return new Vertex(this.x + x, this.y + y);
+    }
     public List<Vertex> getNeighbors(Predicate<Vertex> fn) {
         List<Vertex> neighbors = new ArrayList<>();
         for (int[] dir : Utility.DIRS) {
