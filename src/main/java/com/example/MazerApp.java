@@ -1,23 +1,16 @@
 package com.example;
 
-import java.util.Arrays;
-
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class MazerApp extends Application {
@@ -62,7 +55,7 @@ public class MazerApp extends Application {
         controlsPane.setAlignment(Pos.CENTER);
         controlsPane.setPadding(new Insets(5, 5, 5, 5));
         Canvas canvas = new Canvas(0.8 * width, height);
-        GraphicsContext g = canvas.getGraphicsContext2D();
+        // GraphicsContext g = canvas.getGraphicsContext2D();
         mainPane.setRight(controlsPane);
         mainPane.setCenter(canvas);
         Scene mainScene = new Scene(mainPane, width, height);
