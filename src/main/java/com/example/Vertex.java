@@ -41,7 +41,7 @@ public class Vertex {
     }
     public List<Vertex> getNeighbors(Predicate<Vertex> fn) {
         List<Vertex> neighbors = new ArrayList<>();
-        for (int[] dir : Utility.DIRS) {
+        for (int[] dir : Utils.DIRS) {
             Vertex curr = new Vertex(x + dir[0], y + dir[1]);
             if (fn.test(curr))
                 neighbors.add(curr);
