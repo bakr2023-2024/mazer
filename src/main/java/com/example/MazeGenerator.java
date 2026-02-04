@@ -1,6 +1,8 @@
 package com.example;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 
@@ -54,7 +56,32 @@ public class MazeGenerator {
                 stack.pop();
         }
     }
-private void kruskal(){
-    
+
+    private List<Edge> getEdges() {
+        List<Edge> edges = new ArrayList<>();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Vertex curr = new Vertex(x, y);
+                if (y < height - 1)
+                    edges.add(new Edge(curr, curr.add(0, 1)));
+                if (x < width - 1)
+                    edges.add(new Edge(curr, curr.add(1, 0)));
+            }
+        }
+        return edges;
+    }
+
+    private List<Vertex> getVertices() {
+        List<Vertex> vertices = new ArrayList<>();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                vertices.add(new Vertex(x, y));
+            }
+        }
+        return vertices;
+    }
+
+    private void kruskal() {
+
 }
 }
