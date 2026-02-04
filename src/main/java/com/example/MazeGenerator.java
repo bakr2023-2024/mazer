@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MazeGenerator {
     private final BitMaze map;
@@ -42,6 +45,9 @@ public class MazeGenerator {
             case RECURSIVE_DIVIDER:
                 map.setMapForWallAdder();
                 recursiveDivider(0, 0, width - 1, height - 1);
+                break;
+            case ELLER:
+                eller();
                 break;
         }
     }
@@ -249,6 +255,34 @@ public class MazeGenerator {
             }
             recursiveDivider(sx, sy, ex, wall);
             recursiveDivider(sx, wall + 1, ex, ey);
+        }
+    }
+
+    private void eller() {
+        DisjointSet ds = new DisjointSet(width, height);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width - 1; x++) {
+                boolean cond = y < height - 1 ? r.nextBoolean() : true;
+                Vertex curr = new Vertex(x, y);
+                Vertex neighbor = new Vertex(x + 1, y);
+                if (cond && ds.union(curr, neighbor))
+                    map.clearWall(curr, neighbor);
+            }
+            if (y < height - 1) {
+                final int fy = y;
+                IntStream.range(0, width).mapToObj(x -> new Vertex(x, fy))
+                        .collect(Collectors.groupingBy(v -> ds.find(v.y * width + v.x)))
+                        .forEach((parent, members) -> {
+                            int nSamples = r.nextInt(members.size()) + 1;
+                            Collections.shuffle(members);
+                            for (int i = 0; i < nSamples; i++) {
+                                Vertex curr = members.remove(r.nextInt(members.size()));
+                                Vertex neighbor = curr.add(0, 1);
+                                if (ds.union(curr, neighbor))
+                                    map.clearWall(curr, neighbor);
+                            }
+                        });
+            }
         }
     }
 }
