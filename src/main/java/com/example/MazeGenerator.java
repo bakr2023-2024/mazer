@@ -1,6 +1,7 @@
 package com.example;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,9 @@ public class MazeGenerator {
                 break;
             case ALDOUS_BRODER:
                 aldousBroder();
+                break;
+            case WILSON:
+                wilson();
                 break;
         }
     }
@@ -134,6 +138,30 @@ private void aldousBroder() {
             visited.add(neighbor);
         }
         curr = neighbor;
+    }
+}
+
+private void wilson() {
+    var vertices = getVertices();
+    Collections.shuffle(vertices);
+    HashSet<Vertex> ust = new HashSet<>();
+    ust.add(vertices.remove(r.nextInt(vertices.size())));
+    HashMap<Vertex, Vertex> path = new HashMap<>();
+    int n = width * height;
+    while (ust.size() < n) {
+        Vertex curr = vertices.remove(r.nextInt(vertices.size()));
+        Vertex start = curr;
+        while (!ust.contains(curr)) {
+            var next = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+            path.put(curr, next);
+            curr = next;
+        }
+        while (!start.equals(curr)) {
+            Vertex next = path.get(start);
+            ust.add(start);
+            map.clearWall(start, next);
+            start = next;
+        }
     }
 }
 }
