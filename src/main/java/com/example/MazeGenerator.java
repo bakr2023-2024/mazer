@@ -130,6 +130,7 @@ private void aldousBroder() {
     var vertices = getVertices();
     HashSet<Vertex> visited = new HashSet<>();
     Vertex curr = vertices.remove(r.nextInt(vertices.size()));
+    visited.add(curr);
     int n = width * height;
     while (visited.size() < n) {
         var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
