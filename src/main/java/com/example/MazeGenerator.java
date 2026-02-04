@@ -40,7 +40,8 @@ public class MazeGenerator {
                 growingTree();
                 break;
             case RECURSIVE_DIVIDER:
-                recursiveDivider();
+                map.setMapForWallAdder();
+                recursiveDivider(0, 0, width - 1, height - 1);
                 break;
         }
     }
@@ -60,8 +61,6 @@ public class MazeGenerator {
     public BitMaze getMap() {
         return map;
     }
-
-
 
     private List<Edge> getEdges() {
         List<Edge> edges = new ArrayList<>();
@@ -103,6 +102,7 @@ public class MazeGenerator {
                 stack.pop();
         }
     }
+
     private void kruskal() {
         List<Edge> edges = getEdges();
         Collections.shuffle(edges);
@@ -111,122 +111,144 @@ public class MazeGenerator {
             if (ds.union(e.getV1(), e.getV2()))
                 map.clearWall(e.getV1(), e.getV2());
         }
-}
-
-private void prim() {
-    var vertices = getVertices();
-    Vertex start = vertices.remove(r.nextInt(vertices.size()));
-    HashSet<Vertex> in = new HashSet<>();
-    in.add(start);
-    List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> inBounds(v)));
-    while (!frontier.isEmpty()) {
-        Vertex curr = frontier.remove(r.nextInt(frontier.size()));
-        var neighbors = curr.getNeighbors(v -> inBounds(v) && !frontier.contains(v));
-        Collections.shuffle(neighbors);
-        List<Vertex> inNeighbors = new ArrayList<>();
-        for (Vertex n : neighbors) {
-            if (in.contains(n))
-                inNeighbors.add(n);
-            else
-                frontier.add(n);
-        }
-        if (!inNeighbors.isEmpty())
-            map.clearWall(curr, inNeighbors.get(0));
-        in.add(curr);
     }
-}
 
-private void aldousBroder() {
-    var vertices = getVertices();
-    HashSet<Vertex> visited = new HashSet<>();
-    Vertex curr = vertices.remove(r.nextInt(vertices.size()));
-    visited.add(curr);
-    int n = width * height;
-    while (visited.size() < n) {
-        var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
-        if (!visited.contains(neighbor)) {
-            map.clearWall(curr, neighbor);
-            visited.add(neighbor);
+    private void prim() {
+        var vertices = getVertices();
+        Vertex start = vertices.remove(r.nextInt(vertices.size()));
+        HashSet<Vertex> in = new HashSet<>();
+        in.add(start);
+        List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> inBounds(v)));
+        while (!frontier.isEmpty()) {
+            Vertex curr = frontier.remove(r.nextInt(frontier.size()));
+            var neighbors = curr.getNeighbors(v -> inBounds(v) && !frontier.contains(v));
+            Collections.shuffle(neighbors);
+            List<Vertex> inNeighbors = new ArrayList<>();
+            for (Vertex n : neighbors) {
+                if (in.contains(n))
+                    inNeighbors.add(n);
+                else
+                    frontier.add(n);
+            }
+            if (!inNeighbors.isEmpty())
+                map.clearWall(curr, inNeighbors.get(0));
+            in.add(curr);
         }
-        curr = neighbor;
     }
-}
 
-private void wilson() {
-    var vertices = getVertices();
-    Collections.shuffle(vertices);
-    HashSet<Vertex> ust = new HashSet<>();
-    ust.add(vertices.remove(r.nextInt(vertices.size())));
-    HashMap<Vertex, Vertex> path = new HashMap<>();
-    int n = width * height;
-    while (ust.size() < n) {
+    private void aldousBroder() {
+        var vertices = getVertices();
+        HashSet<Vertex> visited = new HashSet<>();
         Vertex curr = vertices.remove(r.nextInt(vertices.size()));
-        Vertex start = curr;
-        while (!ust.contains(curr)) {
-            var next = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
-            path.put(curr, next);
-            curr = next;
-        }
-        while (!start.equals(curr)) {
-            Vertex next = path.get(start);
-            ust.add(start);
-            map.clearWall(start, next);
-            start = next;
+        visited.add(curr);
+        int n = width * height;
+        while (visited.size() < n) {
+            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+            if (!visited.contains(neighbor)) {
+                map.clearWall(curr, neighbor);
+                visited.add(neighbor);
+            }
+            curr = neighbor;
         }
     }
-}
 
-private void huntAndKill() {
-    var vertices = getVertices();
-    Collections.shuffle(vertices);
-    HashSet<Vertex> visited = new HashSet<>();
-    Vertex curr = vertices.remove(r.nextInt(vertices.size()));
-    visited.add(curr);
-    int n = width * height;
-    while (visited.size() < n) {
-        var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
-        if (!neighbors.isEmpty()) {
-            var neighbor = neighbors.get(r.nextInt(neighbors.size()));
-            map.clearWall(curr, neighbor);
-            curr = neighbor;
-        } else {
-            for (Vertex vtx : vertices) {
-                neighbors = vtx.getNeighbors(v -> inBounds(v) && visited.contains(v));
-                if (!neighbors.isEmpty()) {
-                    var neighbor = neighbors.get(r.nextInt(neighbors.size()));
-                    curr = vtx;
-                    map.clearWall(curr, neighbor);
-                    break;
-                }
+    private void wilson() {
+        var vertices = getVertices();
+        Collections.shuffle(vertices);
+        HashSet<Vertex> ust = new HashSet<>();
+        ust.add(vertices.remove(r.nextInt(vertices.size())));
+        HashMap<Vertex, Vertex> path = new HashMap<>();
+        int n = width * height;
+        while (ust.size() < n) {
+            Vertex curr = vertices.remove(r.nextInt(vertices.size()));
+            Vertex start = curr;
+            while (!ust.contains(curr)) {
+                var next = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+                path.put(curr, next);
+                curr = next;
+            }
+            while (!start.equals(curr)) {
+                Vertex next = path.get(start);
+                ust.add(start);
+                map.clearWall(start, next);
+                start = next;
             }
         }
+    }
+
+    private void huntAndKill() {
+        var vertices = getVertices();
+        Collections.shuffle(vertices);
+        HashSet<Vertex> visited = new HashSet<>();
+        Vertex curr = vertices.remove(r.nextInt(vertices.size()));
         visited.add(curr);
-        vertices.remove(curr);
+        int n = width * height;
+        while (visited.size() < n) {
+            var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+            if (!neighbors.isEmpty()) {
+                var neighbor = neighbors.get(r.nextInt(neighbors.size()));
+                map.clearWall(curr, neighbor);
+                curr = neighbor;
+            } else {
+                for (Vertex vtx : vertices) {
+                    neighbors = vtx.getNeighbors(v -> inBounds(v) && visited.contains(v));
+                    if (!neighbors.isEmpty()) {
+                        var neighbor = neighbors.get(r.nextInt(neighbors.size()));
+                        curr = vtx;
+                        map.clearWall(curr, neighbor);
+                        break;
+                    }
+                }
+            }
+            visited.add(curr);
+            vertices.remove(curr);
+        }
     }
-}
 
-private void growingTree() {
-    List<Vertex> set = new ArrayList<>();
-    Vertex curr = Utils.getRandomVtx(width, height);
-    set.add(curr);
-    HashSet<Vertex> visited = new HashSet<>();
-    visited.add(curr);
-    while (!set.isEmpty()) {
-        int rand = r.nextInt(3);
-        int choice = rand == 0 ? 0 : rand == 1 ? r.nextInt(set.size()) : set.size() - 1;
-        curr = set.get(choice);
-        var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
-        if (!neighbors.isEmpty()) {
-            Vertex neighbor = neighbors.get(r.nextInt(neighbors.size()));
-            map.clearWall(curr, neighbor);
-            visited.add(neighbor);
-            set.add(neighbor);
-        } else
-            set.remove(choice);
+    private void growingTree() {
+        List<Vertex> set = new ArrayList<>();
+        Vertex curr = Utils.getRandomVtx(width, height);
+        set.add(curr);
+        HashSet<Vertex> visited = new HashSet<>();
+        visited.add(curr);
+        while (!set.isEmpty()) {
+            int rand = r.nextInt(3);
+            int choice = rand == 0 ? 0 : rand == 1 ? r.nextInt(set.size()) : set.size() - 1;
+            curr = set.get(choice);
+            var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+            if (!neighbors.isEmpty()) {
+                Vertex neighbor = neighbors.get(r.nextInt(neighbors.size()));
+                map.clearWall(curr, neighbor);
+                visited.add(neighbor);
+                set.add(neighbor);
+            } else
+                set.remove(choice);
+        }
     }
-}
 
-private void recursiveDivider() {
-
-}
+    private void recursiveDivider(int sx, int sy, int ex, int ey) {
+        if (ex - sx < 1 || ey - sy < 1)
+            return;
+        if (ex - sx > ey - sy) {
+            int wall = r.nextInt(ex - sx) + sx;
+            int gap = r.nextInt(ey - sy + 1) + sy;
+            for (int y = sy; y <= ey; y++) {
+                if (y == gap)
+                    continue;
+                map.setWall(new Vertex(wall, y), new Vertex(wall + 1, y));
+            }
+            recursiveDivider(sx, sy, wall, ey);
+            recursiveDivider(wall + 1, sy, ex, ey);
+        } else {
+            int wall = r.nextInt(ey - sy) + sy;
+            int gap = r.nextInt(ex - sx + 1) + sx;
+            for (int x = sx; x <= ex; x++) {
+                if (x == gap)
+                    continue;
+                map.setWall(new Vertex(x, wall), new Vertex(x, wall + 1));
+            }
+            recursiveDivider(sx, sy, ex, wall);
+            recursiveDivider(sx, wall + 1, ex, ey);
+        }
+    }
 }
