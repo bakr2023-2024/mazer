@@ -11,5 +11,5 @@ public enum Generators {
     RECURSIVE_DIVIDER,
     ELLER,
     BINARY_TREE,
-    // SIDEWINDER,
+    SIDEWINDER,
 }

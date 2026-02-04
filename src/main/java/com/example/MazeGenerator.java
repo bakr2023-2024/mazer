@@ -52,6 +52,9 @@ public class MazeGenerator {
             case BINARY_TREE:
                 binaryTree();
                 break;
+            case SIDEWINDER:
+                sidewinder();
+                break;
         }
     }
 
@@ -300,5 +303,22 @@ public class MazeGenerator {
                     map.clearWall(new Vertex(x, y), new Vertex(x + 1, y));
             }
         }
+    }
+
+    private void sidewinder() {
+        List<Vertex> run = new ArrayList<>();
+        for (int y = 0; y < height - 1; y++) {
+            for (int x = 0; x < width; x++) {
+                run.add(new Vertex(x, y));
+                if (x == width - 1 || r.nextBoolean()) {
+                    Vertex curr = run.get(r.nextInt(run.size()));
+                    map.clearWall(curr, curr.add(0, 1));
+                    run.clear();
+                } else
+                    map.clearWall(new Vertex(x, y), new Vertex(x + 1, y));
+            }
+        }
+        for (int x = 0; x < width - 1; x++)
+            map.clearWall(new Vertex(x, height - 1), new Vertex(x + 1, height - 1));
     }
 }
