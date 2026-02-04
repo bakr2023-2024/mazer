@@ -64,9 +64,13 @@ public class MazeGeneratorTest {
     @EnumSource(Generators.class)
     void testMethodWithEachEnumValue(Generators alg) {
         System.out.println(alg.toString());
+        for (int i = 0; i < 100; i++) {
         gen = new MazeGenerator(width, height, alg);
         gen.printMap();
-        assertEquals(countEdges(), width * height - 1);
-        assertTrue(dfs());
+        System.out.println("-------");
+        assertEquals(width * height - 1, countEdges(), "incorrect edge count: " + alg.toString());
+        assertTrue(dfs(), "unsolvable maze: " + alg.toString());
     }
+
+}
 }

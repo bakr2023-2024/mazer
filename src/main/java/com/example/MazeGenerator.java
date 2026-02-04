@@ -33,6 +33,9 @@ public class MazeGenerator {
             case WILSON:
                 wilson();
                 break;
+            case HUNT_AND_KILL:
+                huntAndKill();
+                break;
         }
     }
 
@@ -163,6 +166,35 @@ private void wilson() {
             map.clearWall(start, next);
             start = next;
         }
+    }
+}
+
+private void huntAndKill() {
+    var vertices = getVertices();
+    Collections.shuffle(vertices);
+    HashSet<Vertex> visited = new HashSet<>();
+    Vertex curr = vertices.remove(r.nextInt(vertices.size()));
+    visited.add(curr);
+    int n = width * height;
+    while (visited.size() < n) {
+        var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+        if (!neighbors.isEmpty()) {
+            var neighbor = neighbors.get(r.nextInt(neighbors.size()));
+            map.clearWall(curr, neighbor);
+            curr = neighbor;
+        } else {
+            for (Vertex vtx : vertices) {
+                neighbors = vtx.getNeighbors(v -> inBounds(v) && visited.contains(v));
+                if (!neighbors.isEmpty()) {
+                    var neighbor = neighbors.get(r.nextInt(neighbors.size()));
+                    curr = vtx;
+                    map.clearWall(curr, neighbor);
+                    break;
+                }
+            }
+        }
+        visited.add(curr);
+        vertices.remove(curr);
     }
 }
 }
