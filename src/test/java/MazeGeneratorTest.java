@@ -1,9 +1,7 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Stack;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +63,7 @@ public class MazeGeneratorTest {
     @ParameterizedTest
     @EnumSource(Generators.class)
     void testMethodWithEachEnumValue(Generators alg) {
+        System.out.println(alg.toString());
         gen = new MazeGenerator(width, height, alg);
         gen.printMap();
         assertEquals(countEdges(), width * height - 1);

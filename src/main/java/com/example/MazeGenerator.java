@@ -1,5 +1,6 @@
 package com.example;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,8 @@ public class MazeGenerator {
             case RECURSIVE_BACKTRACKER:
                 recursiveBacktracker();
                 break;
-            default:
+            case KRUSKAL:
+                kruskal();
                 break;
         }
     }
@@ -82,6 +84,13 @@ public class MazeGenerator {
     }
 
     private void kruskal() {
-
+        List<Edge> edges = getEdges();
+        Collections.shuffle(edges);
+        DisjointSet ds = new DisjointSet(width, height);
+        for (Edge e : edges) {
+            if (ds.union(e.getV1(), e.getV2()))
+                map.clearWall(e.getV1(), e.getV2());
+        }
 }
+
 }
