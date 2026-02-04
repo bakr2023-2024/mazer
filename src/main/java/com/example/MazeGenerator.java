@@ -26,6 +26,9 @@ public class MazeGenerator {
             case PRIM:
                 prim();
                 break;
+            case ALDOUS_BRODER:
+                aldousBroder();
+                break;
         }
     }
 
@@ -116,6 +119,21 @@ private void prim() {
         if (!inNeighbors.isEmpty())
             map.clearWall(curr, inNeighbors.get(0));
         in.add(curr);
+    }
+}
+
+private void aldousBroder() {
+    var vertices = getVertices();
+    HashSet<Vertex> visited = new HashSet<>();
+    Vertex curr = vertices.remove(r.nextInt(vertices.size()));
+    int n = width * height;
+    while (visited.size() < n) {
+        var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+        if (!visited.contains(neighbor)) {
+            map.clearWall(curr, neighbor);
+            visited.add(neighbor);
+        }
+        curr = neighbor;
     }
 }
 }
