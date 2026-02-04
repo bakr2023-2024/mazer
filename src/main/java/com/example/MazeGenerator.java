@@ -49,6 +49,9 @@ public class MazeGenerator {
             case ELLER:
                 eller();
                 break;
+            case BINARY_TREE:
+                binaryTree();
+                break;
         }
     }
 
@@ -282,6 +285,19 @@ public class MazeGenerator {
                                     map.clearWall(curr, neighbor);
                             }
                         });
+            }
+        }
+    }
+
+    private void binaryTree() {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (x < width - 1 && y < height - 1)
+                    map.clearWall(new Vertex(x, y), r.nextBoolean() ? new Vertex(x + 1, y) : new Vertex(x, y + 1));
+                else if (x == width - 1 && y < height - 1)
+                    map.clearWall(new Vertex(x, y), new Vertex(x, y + 1));
+                else if (y == height - 1 && x < width - 1)
+                    map.clearWall(new Vertex(x, y), new Vertex(x + 1, y));
             }
         }
     }

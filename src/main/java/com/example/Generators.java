@@ -10,6 +10,6 @@ public enum Generators {
     GROWING_TREE,
     RECURSIVE_DIVIDER,
     ELLER,
-    // BINARY_TREE,
+    BINARY_TREE,
     // SIDEWINDER,
 }
