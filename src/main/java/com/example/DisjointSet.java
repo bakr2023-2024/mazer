@@ -4,17 +4,17 @@ import java.util.Arrays;
 
 public class DisjointSet {
     private final int[] set;
-    private final int width, height;
+    private final int w, h;
 
     public DisjointSet(int width, int height) {
-        this.width = width;
-        this.height = height;
-        this.set = new int[width * height];
+        w = width;
+        h = height;
+        this.set = new int[w * h];
         Arrays.fill(this.set, -1);
     }
 
     public int getSize(Vertex v) {
-        return set[find(v.y * width + v.x)];
+        return set[find(v.y * w + v.x)];
     }
 
     public int find(int idx) {
@@ -25,8 +25,8 @@ public class DisjointSet {
     }
 
     public boolean union(Vertex v1, Vertex v2) {
-        int i1 = v1.y * width + v1.x;
-        int i2 = v2.y * width + v2.x;
+        int i1 = v1.y * w + v1.x;
+        int i2 = v2.y * w + v2.x;
         int p1 = find(i1);
         int p2 = find(i2);
         if (p1 == p2)

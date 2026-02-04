@@ -6,7 +6,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+// import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -60,7 +60,7 @@ public class MazerApp extends Application {
         Canvas canvas = new Canvas(0.8 * width, height);
         int[][] map = { { 13, 13, 13 }, { 1, 4, 5 }, { 7, 3, 6 } };
         Scene mainScene = new Scene(mainPane, width, height);
-        GraphicsContext g = canvas.getGraphicsContext2D();
+        // GraphicsContext g = canvas.getGraphicsContext2D();
         RayCasterView rcv = new RayCasterView(map, 1, 1, 2, 2, width, height, () -> {
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);

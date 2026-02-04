@@ -23,6 +23,9 @@ public class MazeGenerator {
             case KRUSKAL:
                 kruskal();
                 break;
+            case PRIM:
+                prim();
+                break;
         }
     }
 
@@ -93,4 +96,26 @@ public class MazeGenerator {
         }
 }
 
+private void prim() {
+    var vertices = getVertices();
+    Vertex start = vertices.remove(r.nextInt(vertices.size()));
+    HashSet<Vertex> in = new HashSet<>();
+    in.add(start);
+    List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> inBounds(v)));
+    while (!frontier.isEmpty()) {
+        Vertex curr = frontier.remove(r.nextInt(frontier.size()));
+        var neighbors = curr.getNeighbors(v -> inBounds(v) && !frontier.contains(v));
+        Collections.shuffle(neighbors);
+        List<Vertex> inNeighbors = new ArrayList<>();
+        for (Vertex n : neighbors) {
+            if (in.contains(n))
+                inNeighbors.add(n);
+            else
+                frontier.add(n);
+        }
+        if (!inNeighbors.isEmpty())
+            map.clearWall(curr, inNeighbors.get(0));
+        in.add(curr);
+    }
+}
 }
