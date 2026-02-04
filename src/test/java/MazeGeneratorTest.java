@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashSet;
 import java.util.Stack;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -16,7 +15,7 @@ import com.example.Vertex;
 
 public class MazeGeneratorTest {
     private MazeGenerator gen;
-    private int width, height;
+    private int width = 3, height = 3;
 
     public int countEdges() {
         BitMaze map = gen.getMap();
@@ -54,20 +53,14 @@ public class MazeGeneratorTest {
         return false;
     }
 
-    @BeforeEach
-    public void init() {
-        width = 3;
-        height = 3;
-    }
-
     @ParameterizedTest
     @EnumSource(Generators.class)
     void testMethodWithEachEnumValue(Generators alg) {
         System.out.println(alg.toString());
         for (int i = 0; i < 100; i++) {
         gen = new MazeGenerator(width, height, alg);
-        gen.printMap();
-        System.out.println("-------");
+        // gen.printMap();
+        // System.out.println("-------");
         assertEquals(width * height - 1, countEdges(), "incorrect edge count: " + alg.toString());
         assertTrue(dfs(), "unsolvable maze: " + alg.toString());
     }

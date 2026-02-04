@@ -7,7 +7,7 @@ public enum Generators {
     ALDOUS_BRODER,
     WILSON,
     HUNT_AND_KILL,
-    // GROWING_TREE,
+    GROWING_TREE,
     // RECURSIVE_DIVIDER,
     // ELLER,
     // BINARY_TREE,

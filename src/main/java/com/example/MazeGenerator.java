@@ -36,6 +36,9 @@ public class MazeGenerator {
             case HUNT_AND_KILL:
                 huntAndKill();
                 break;
+            case GROWING_TREE:
+                growingTree();
+                break;
         }
     }
 
@@ -195,6 +198,27 @@ private void huntAndKill() {
         }
         visited.add(curr);
         vertices.remove(curr);
+    }
+}
+
+private void growingTree() {
+    List<Vertex> set = new ArrayList<>();
+    Vertex curr = Utils.getRandomVtx(width, height);
+    set.add(curr);
+    HashSet<Vertex> visited = new HashSet<>();
+    visited.add(curr);
+    while (!set.isEmpty()) {
+        int rand = r.nextInt(3);
+        int choice = rand == 0 ? 0 : rand == 1 ? r.nextInt(set.size()) : set.size() - 1;
+        curr = set.get(choice);
+        var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+        if (!neighbors.isEmpty()) {
+            Vertex neighbor = neighbors.get(r.nextInt(neighbors.size()));
+            map.clearWall(curr, neighbor);
+            visited.add(neighbor);
+            set.add(neighbor);
+        } else
+            set.remove(choice);
     }
 }
 }
