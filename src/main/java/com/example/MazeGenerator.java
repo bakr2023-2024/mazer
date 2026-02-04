@@ -39,6 +39,9 @@ public class MazeGenerator {
             case GROWING_TREE:
                 growingTree();
                 break;
+            case RECURSIVE_DIVIDER:
+                recursiveDivider();
+                break;
         }
     }
 
@@ -58,22 +61,7 @@ public class MazeGenerator {
         return map;
     }
 
-    private void recursiveBacktracker() {
-        Vertex curr = Utils.getRandomVtx(width, height);
-        Stack<Vertex> stack = new Stack<>();
-        HashSet<Vertex> visited = new HashSet<>();
-        stack.add(curr);
-        while (!stack.isEmpty()) {
-            curr = stack.peek();
-            visited.add(curr);
-            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v) && !visited.contains(v)));
-            if (neighbor != null) {
-                map.clearWall(curr, neighbor);
-                stack.add(neighbor);
-            } else
-                stack.pop();
-        }
-    }
+
 
     private List<Edge> getEdges() {
         List<Edge> edges = new ArrayList<>();
@@ -99,6 +87,22 @@ public class MazeGenerator {
         return vertices;
     }
 
+    private void recursiveBacktracker() {
+        Vertex curr = Utils.getRandomVtx(width, height);
+        Stack<Vertex> stack = new Stack<>();
+        HashSet<Vertex> visited = new HashSet<>();
+        stack.add(curr);
+        while (!stack.isEmpty()) {
+            curr = stack.peek();
+            visited.add(curr);
+            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v) && !visited.contains(v)));
+            if (neighbor != null) {
+                map.clearWall(curr, neighbor);
+                stack.add(neighbor);
+            } else
+                stack.pop();
+        }
+    }
     private void kruskal() {
         List<Edge> edges = getEdges();
         Collections.shuffle(edges);
@@ -220,5 +224,9 @@ private void growingTree() {
         } else
             set.remove(choice);
     }
+}
+
+private void recursiveDivider() {
+
 }
 }

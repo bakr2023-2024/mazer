@@ -8,7 +8,7 @@ public enum Generators {
     WILSON,
     HUNT_AND_KILL,
     GROWING_TREE,
-    // RECURSIVE_DIVIDER,
+    RECURSIVE_DIVIDER,
     // ELLER,
     // BINARY_TREE,
     // SIDEWINDER,

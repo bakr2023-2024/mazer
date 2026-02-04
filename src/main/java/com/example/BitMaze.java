@@ -1,5 +1,7 @@
 package com.example;
 
+import java.util.Arrays;
+
 public class BitMaze {
     private final int[][] map;
     private final int width, height;
@@ -27,6 +29,19 @@ public class BitMaze {
 
     public int getHeight() {
         return height;
+    }
+
+    public void setMapForWallAdder() {
+        for (int y = 0; y < height; y++) {
+            Arrays.fill(map[y], 0);
+            map[y][0] = 0b0001;
+            map[y][width - 1] = 0b0100;
+        }
+        for (int x = 0; x < width; x++) {
+            map[0][x] |= 0b1000;
+            map[height - 1][x] |= 0b0010;
+        }
+
     }
     public int getDir(Vertex curr, Vertex neighbor) {
         int dx = neighbor.x - curr.x;

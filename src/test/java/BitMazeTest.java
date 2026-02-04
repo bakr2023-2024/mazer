@@ -35,6 +35,18 @@ public class BitMazeTest {
     }
 
     @Test
+    public void setMapForWallAdderWorks() {
+        maze.setMapForWallAdder();
+        int[][] map = maze.getMap();
+        int[][] mask = { { 9, 8, 12 }, { 1, 0, 4 }, { 3, 2, 6 } };
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                assertEquals(mask[y][x], map[y][x]);
+            }
+        }
+    }
+
+    @Test
     public void getDirWorks() {
         Vertex right = curr.add(1, 0);
         Vertex left = curr.add(-1, 0);
