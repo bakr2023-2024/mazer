@@ -54,4 +54,7 @@ public class MazeGenerator {
                 stack.pop();
         }
     }
+private void kruskal(){
+    
+}
 }
