@@ -19,6 +19,8 @@ public class MazeSolver {
                 return bfs(maze, start, end);
             case ASTAR:
                 return aStar(maze, start, end);
+            case BEST:
+                return best(maze, start, end);
             default:
                 return null;
         }
@@ -102,6 +104,33 @@ public class MazeSolver {
             int aF = fCost.applyAsInt(a), bF = fCost.applyAsInt(b);
             return aF == bF ? heuristic.get(a) - heuristic.get(b) : aF - bF;
         });
+        pq.add(start);
+        while (!pq.isEmpty()) {
+            Vertex curr = pq.poll();
+            visited.add(curr);
+            if (curr.equals(end))
+                return constructPath(path, start, end);
+            curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)).forEach(n -> {
+                relaxEdge(path, n, curr);
+                visited.add(n);
+                pq.add(n);
+            });
+        }
+        return null;
+    }
+
+    private List<Vertex> best(BitMaze maze, Vertex start, Vertex end) {
+        HashMap<Vertex, Pair> path = new HashMap<>();
+        path.put(start, new Pair(start, 0));
+        HashMap<Vertex, Integer> heuristic = new HashMap<>();
+        for (int y = 0; y < maze.getHeight(); y++) {
+            for (int x = 0; x < maze.getWidth(); x++) {
+                Vertex curr = new Vertex(x, y);
+                heuristic.put(curr, getManhattanDistance(curr, end));
+            }
+        }
+        HashSet<Vertex> visited = new HashSet<>();
+        PriorityQueue<Vertex> pq = new PriorityQueue<>((a, b) -> heuristic.get(a) - heuristic.get(b));
         pq.add(start);
         while (!pq.isEmpty()) {
             Vertex curr = pq.poll();

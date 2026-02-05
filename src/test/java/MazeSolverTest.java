@@ -25,6 +25,7 @@ public class MazeSolverTest {
     @ParameterizedTest
     @EnumSource(Solvers.class)
     public void testSolver(Solvers alg) {
+        System.out.println(alg.toString());
         List<Vertex> path = solver.solve(maze, start, end, alg);
         assertNotNull(path, "Couldn't solve maze using " + alg.toString());
         assertTrue(path.get(0).equals(start), "First vertex doesn't equal start vertex");

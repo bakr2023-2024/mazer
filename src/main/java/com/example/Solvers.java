@@ -4,6 +4,6 @@ public enum Solvers {
     DFS,
     BFS,
     ASTAR,
-    // BEST,
+    BEST,
     // TREMAUX
 }
