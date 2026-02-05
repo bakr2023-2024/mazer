@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -62,6 +61,13 @@ public class MazeGenerator {
         map.printMaze();
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
     public boolean inBounds(Vertex v) {
         return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height;
     }
