@@ -3,7 +3,9 @@ package com.example;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Stack;
 
 public class MazeSolver {
@@ -11,6 +13,8 @@ public class MazeSolver {
         switch (alg) {
             case DFS:
                 return dfs(maze, start, end);
+            case BFS:
+                return bfs(maze, start, end);
             default:
                 return null;
         }
@@ -54,4 +58,23 @@ public class MazeSolver {
         return null;
     }
 
+    private List<Vertex> bfs(BitMaze maze, Vertex start, Vertex end) {
+        Queue<Vertex> queue = new LinkedList<>();
+        queue.add(start);
+        HashSet<Vertex> visited = new HashSet<>();
+        HashMap<Vertex, Pair> path = new HashMap<>();
+        path.put(start, new Pair(start, 0));
+        while (!queue.isEmpty()) {
+            Vertex curr = queue.poll();
+            visited.add(curr);
+            if (curr.equals(end))
+                return constructPath(path, start, end);
+            curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(v, curr)).forEach(n -> {
+                visited.add(n);
+                queue.add(n);
+                relaxEdge(path, n, curr);
+            });
+        }
+        return null;
+    }
 }
