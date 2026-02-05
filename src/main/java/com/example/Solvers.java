@@ -1,5 +1,9 @@
 package com.example;
 
 public enum Solvers {
-    DFS, BFS
+    DFS,
+    BFS,
+    ASTAR,
+    BEST,
+    TREMAUX
 }

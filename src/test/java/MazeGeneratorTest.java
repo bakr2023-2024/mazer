@@ -44,7 +44,7 @@ public class MazeGeneratorTest {
             if (curr.equals(end))
                 return true;
             var neighbor = Utils.getRandomVtx(
-                    curr.getNeighbors(v -> gen.inBounds(v) && !visited.contains(v) && !bm.hasWall(curr, v)));
+                    curr.getNeighbors(v -> bm.inbounds(v) && !visited.contains(v) && !bm.hasWall(curr, v)));
             if (neighbor != null)
                 stack.add(neighbor);
             else

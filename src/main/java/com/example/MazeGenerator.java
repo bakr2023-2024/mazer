@@ -68,13 +68,6 @@ public class MazeGenerator {
     public int getHeight() {
         return height;
     }
-    public boolean inBounds(Vertex v) {
-        return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height;
-    }
-
-    public boolean inBounds(int x, int y) {
-        return x >= 0 && x < width && y >= 0 && y < height;
-    }
 
     public BitMaze getMap() {
         return map;
@@ -112,7 +105,7 @@ public class MazeGenerator {
         while (!stack.isEmpty()) {
             curr = stack.peek();
             visited.add(curr);
-            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v) && !visited.contains(v)));
+            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v) && !visited.contains(v)));
             if (neighbor != null) {
                 map.clearWall(curr, neighbor);
                 stack.add(neighbor);
@@ -136,10 +129,10 @@ public class MazeGenerator {
         Vertex start = vertices.remove(r.nextInt(vertices.size()));
         HashSet<Vertex> in = new HashSet<>();
         in.add(start);
-        List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> inBounds(v)));
+        List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> map.inbounds(v)));
         while (!frontier.isEmpty()) {
             Vertex curr = frontier.remove(r.nextInt(frontier.size()));
-            var neighbors = curr.getNeighbors(v -> inBounds(v) && !frontier.contains(v));
+            var neighbors = curr.getNeighbors(v -> map.inbounds(v) && !frontier.contains(v));
             Collections.shuffle(neighbors);
             List<Vertex> inNeighbors = new ArrayList<>();
             for (Vertex n : neighbors) {
@@ -161,7 +154,7 @@ public class MazeGenerator {
         visited.add(curr);
         int n = width * height;
         while (visited.size() < n) {
-            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+            var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v)));
             if (!visited.contains(neighbor)) {
                 map.clearWall(curr, neighbor);
                 visited.add(neighbor);
@@ -181,7 +174,7 @@ public class MazeGenerator {
             Vertex curr = vertices.remove(r.nextInt(vertices.size()));
             Vertex start = curr;
             while (!ust.contains(curr)) {
-                var next = Utils.getRandomVtx(curr.getNeighbors(v -> inBounds(v)));
+                var next = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v)));
                 path.put(curr, next);
                 curr = next;
             }
@@ -202,14 +195,14 @@ public class MazeGenerator {
         visited.add(curr);
         int n = width * height;
         while (visited.size() < n) {
-            var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+            var neighbors = curr.getNeighbors(v -> map.inbounds(v) && !visited.contains(v));
             if (!neighbors.isEmpty()) {
                 var neighbor = neighbors.get(r.nextInt(neighbors.size()));
                 map.clearWall(curr, neighbor);
                 curr = neighbor;
             } else {
                 for (Vertex vtx : vertices) {
-                    neighbors = vtx.getNeighbors(v -> inBounds(v) && visited.contains(v));
+                    neighbors = vtx.getNeighbors(v -> map.inbounds(v) && visited.contains(v));
                     if (!neighbors.isEmpty()) {
                         var neighbor = neighbors.get(r.nextInt(neighbors.size()));
                         curr = vtx;
@@ -233,7 +226,7 @@ public class MazeGenerator {
             int rand = r.nextInt(3);
             int choice = rand == 0 ? 0 : rand == 1 ? r.nextInt(set.size()) : set.size() - 1;
             curr = set.get(choice);
-            var neighbors = curr.getNeighbors(v -> inBounds(v) && !visited.contains(v));
+            var neighbors = curr.getNeighbors(v -> map.inbounds(v) && !visited.contains(v));
             if (!neighbors.isEmpty()) {
                 Vertex neighbor = neighbors.get(r.nextInt(neighbors.size()));
                 map.clearWall(curr, neighbor);

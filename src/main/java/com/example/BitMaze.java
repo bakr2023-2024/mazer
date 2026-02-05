@@ -52,6 +52,9 @@ public class BitMaze {
             return dx == -1 ? 0 : 2;
     }
 
+    public boolean inbounds(Vertex v) {
+        return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height;
+    }
     public boolean hasWall(Vertex curr, Vertex neighbor) {
         int wall = getDir(curr, neighbor);
         return (map[curr.y][curr.x] & 1 << wall) != 0;
