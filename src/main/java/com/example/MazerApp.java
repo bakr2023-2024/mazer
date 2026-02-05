@@ -94,18 +94,20 @@ public class MazerApp extends Application {
         controlsPane.setAlignment(Pos.CENTER);
         controlsPane.setPadding(new Insets(5, 5, 5, 5));
         Canvas canvas = new Canvas(0.6 * width, height);
-        int[][] map = { { 13, 13, 13 }, { 1, 4, 5 }, { 7, 3, 6 } };
         Scene mainScene = new Scene(mainPane, width, height);
         g = canvas.getGraphicsContext2D();
-        RayCasterView rcv = new RayCasterView(map, 1, 1, 2, 2, width, height, () -> {
+        simulateBtn.setOnAction((e) -> {
+            if (gen == null)
+                return;
+            RayCasterView rcv = new RayCasterView(gen.getMap().getMap(), 0, 0, gen.getWidth() - 1, gen.getHeight() - 1, width, height,
+                    () -> {
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setHeaderText("Congrats, you solved the maze!");
                 alert.showAndWait();
                 stage.setScene(mainScene);
             });
-        });
-        simulateBtn.setOnAction((e) -> {
+            });
             stage.setScene(rcv.getScene());
             rcv.start();
         });
