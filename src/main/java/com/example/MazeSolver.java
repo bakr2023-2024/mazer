@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.function.ToIntFunction;
 
 public class MazeSolver {
     public List<Vertex> solve(BitMaze maze, Vertex start, Vertex end, Solvers alg) {
@@ -15,6 +17,8 @@ public class MazeSolver {
                 return dfs(maze, start, end);
             case BFS:
                 return bfs(maze, start, end);
+            case ASTAR:
+                return aStar(maze, start, end);
             default:
                 return null;
         }
@@ -73,6 +77,41 @@ public class MazeSolver {
                 visited.add(n);
                 queue.add(n);
                 relaxEdge(path, n, curr);
+            });
+        }
+        return null;
+    }
+
+    private int getManhattanDistance(Vertex v1, Vertex v2) {
+        return Math.abs(v2.x - v1.x) + Math.abs(v2.y - v1.y);
+    }
+
+    private List<Vertex> aStar(BitMaze maze, Vertex start, Vertex end) {
+        HashMap<Vertex, Pair> path = new HashMap<>();
+        path.put(start, new Pair(start, 0));
+        HashMap<Vertex, Integer> heuristic = new HashMap<>();
+        ToIntFunction<Vertex> fCost = v -> heuristic.get(v) + path.get(v).getDistance();
+        for (int y = 0; y < maze.getHeight(); y++) {
+            for (int x = 0; x < maze.getWidth(); x++) {
+                Vertex curr = new Vertex(x, y);
+                heuristic.put(curr, getManhattanDistance(curr, end));
+            }
+        }
+        HashSet<Vertex> visited = new HashSet<>();
+        PriorityQueue<Vertex> pq = new PriorityQueue<>((a, b) -> {
+            int aF = fCost.applyAsInt(a), bF = fCost.applyAsInt(b);
+            return aF == bF ? heuristic.get(a) - heuristic.get(b) : aF - bF;
+        });
+        pq.add(start);
+        while (!pq.isEmpty()) {
+            Vertex curr = pq.poll();
+            visited.add(curr);
+            if (curr.equals(end))
+                return constructPath(path, start, end);
+            curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)).forEach(n -> {
+                relaxEdge(path, n, curr);
+                visited.add(n);
+                pq.add(n);
             });
         }
         return null;
