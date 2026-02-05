@@ -62,8 +62,8 @@ public class MazerApp extends Application {
             int mapHeight = heightSpinner.getValue();
             Generators alg = Generators.valueOf(genAlgs.getValue());
             gen = new MazeGenerator(mapWidth, mapHeight, alg);
-            cellSize = cellSize = Math.min(g.getCanvas().getWidth() / mapWidth,
-                    g.getCanvas().getHeight() / mapHeight);
+            cellSize = Math.min(g.getCanvas().getWidth() / mapWidth,
+                            g.getCanvas().getHeight() / mapHeight);
             renderMaze();
         });
         vBox.getChildren().addAll(new Label("Mazer"),
