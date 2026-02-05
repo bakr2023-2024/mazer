@@ -1,24 +1,24 @@
 package com.example;
 
 public class Pair {
-    private Vertex next;
+    private Vertex prev;
     private int distance;
 
-    public Pair(Vertex next, int distance) {
-        this.next = next;
+    public Pair(Vertex prev, int distance) {
+        this.prev = prev;
         this.distance = distance;
     }
 
-    public Vertex getNext() {
-        return next;
+    public Vertex getprev() {
+        return prev;
     }
 
     public int getDistance() {
         return distance;
     }
 
-    public void setNext(Vertex next) {
-        this.next = next;
+    public void setPrev(Vertex prev) {
+        this.prev = prev;
     }
 
     public void setDistance(int distance) {
