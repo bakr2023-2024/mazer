@@ -59,8 +59,6 @@ public class MazeGeneratorTest {
         System.out.println(alg.toString());
         for (int i = 0; i < 100; i++) {
         gen = new MazeGenerator(width, height, alg);
-        gen.printMap();
-        System.out.println("-------");
         assertEquals(width * height - 1, countEdges(), "incorrect edge count: " + alg.toString());
         assertTrue(dfs(), "unsolvable maze: " + alg.toString());
     }

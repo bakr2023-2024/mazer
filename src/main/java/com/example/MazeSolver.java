@@ -32,4 +32,26 @@ public class MazeSolver {
             path.put(curr, new Pair(prev, path.get(prev).getDistance() + 1));
     }
 
+    private List<Vertex> dfs(BitMaze maze, Vertex start, Vertex end) {
+        Stack<Vertex> stack = new Stack<>();
+        HashSet<Vertex> visited = new HashSet<>();
+        HashMap<Vertex, Pair> path = new HashMap<>();
+        path.put(start, new Pair(start, 0));
+        stack.add(start);
+        while (!stack.isEmpty()) {
+            Vertex curr = stack.peek();
+            visited.add(curr);
+            if (curr.equals(end))
+                return constructPath(path, start, end);
+            var neighbor = Utils.getRandomVtx(
+                    curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)));
+            if (neighbor != null) {
+                stack.add(neighbor);
+                relaxEdge(path, neighbor, curr);
+            } else
+                stack.pop();
+        }
+        return null;
+    }
+
 }

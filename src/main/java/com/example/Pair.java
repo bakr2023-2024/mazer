@@ -9,7 +9,7 @@ public class Pair {
         this.distance = distance;
     }
 
-    public Vertex getprev() {
+    public Vertex getPrev() {
         return prev;
     }
 
