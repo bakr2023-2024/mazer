@@ -84,10 +84,6 @@ public class MazeSolver {
         return null;
     }
 
-    private int getManhattanDistance(Vertex v1, Vertex v2) {
-        return Math.abs(v2.x - v1.x) + Math.abs(v2.y - v1.y);
-    }
-
     private List<Vertex> aStar(BitMaze maze, Vertex start, Vertex end) {
         HashMap<Vertex, Pair> path = new HashMap<>();
         path.put(start, new Pair(start, 0));
@@ -96,7 +92,7 @@ public class MazeSolver {
         for (int y = 0; y < maze.getHeight(); y++) {
             for (int x = 0; x < maze.getWidth(); x++) {
                 Vertex curr = new Vertex(x, y);
-                heuristic.put(curr, getManhattanDistance(curr, end));
+                heuristic.put(curr, Math.abs(curr.x - end.x) + Math.abs(curr.y - end.y));
             }
         }
         HashSet<Vertex> visited = new HashSet<>();
@@ -126,7 +122,7 @@ public class MazeSolver {
         for (int y = 0; y < maze.getHeight(); y++) {
             for (int x = 0; x < maze.getWidth(); x++) {
                 Vertex curr = new Vertex(x, y);
-                heuristic.put(curr, getManhattanDistance(curr, end));
+                heuristic.put(curr, Math.abs(curr.x - end.x) + Math.abs(curr.y - end.y));
             }
         }
         HashSet<Vertex> visited = new HashSet<>();
