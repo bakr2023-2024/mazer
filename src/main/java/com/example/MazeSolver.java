@@ -21,6 +21,8 @@ public class MazeSolver {
                 return aStar(maze, start, end);
             case BEST:
                 return best(maze, start, end);
+            case TREMAUX:
+                return tremaux(maze, start, end);
             default:
                 return null;
         }
@@ -140,5 +142,40 @@ public class MazeSolver {
             });
         }
         return null;
+    }
+
+    private List<Vertex> tremaux(BitMaze maze, Vertex start, Vertex end) {
+        HashMap<Edge, Integer> marks = new HashMap<>();
+        HashMap<Vertex, Pair> path = new HashMap<>();
+        path.put(start, new Pair(start, 0));
+        Vertex curr = start;
+        Vertex prev = start;
+        while (!curr.equals(end)) {
+            final Vertex fPrev = prev;
+            final Vertex fCurr = curr;
+            var neighbors = curr.getNeighbors(
+                    v -> maze.inbounds(v) && marks.get(new Edge(v, fCurr)) == null && !maze.hasWall(fCurr, v));
+            Vertex newNeighbor = Utils.getRandomVtx(neighbors);
+            Edge prevEdge = new Edge(prev, curr);
+            if (newNeighbor != null) {
+                prevEdge = new Edge(curr, newNeighbor);
+                prev = curr;
+                curr = newNeighbor;
+            } else if (marks.get(prevEdge) < 2) {
+                Vertex temp = curr;
+                curr = prev;
+                prev = temp;
+            } else {
+                var neighbor = Utils.getRandomVtx(
+                        curr.getNeighbors(v -> maze.inbounds(v) && !v.equals(fPrev) && !maze.hasWall(fCurr, v)
+                                && marks.get(new Edge(fCurr, v)) < 2));
+                prevEdge = new Edge(curr, neighbor);
+                prev = curr;
+                curr = neighbor;
+            }
+            marks.put(prevEdge, marks.getOrDefault(prevEdge, 0) + 1);
+            relaxEdge(path, curr, prev);
+        }
+        return constructPath(path, start, end);
     }
 }

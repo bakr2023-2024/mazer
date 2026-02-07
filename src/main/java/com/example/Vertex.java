@@ -21,10 +21,9 @@ public class Vertex {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null || !(obj instanceof Vertex))
+        if (obj == null || !(obj instanceof Vertex v))
             return false;
-        Vertex other = (Vertex) obj;
-        return x == other.x && y == other.y;
+        return x == v.x && y == v.y;
     }
 
     @Override

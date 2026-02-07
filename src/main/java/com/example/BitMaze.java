@@ -23,6 +23,13 @@ public class BitMaze {
         return map;
     }
 
+    public void setMap(int[][] oth) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                map[y][x] = oth[y][x];
+            }
+        }
+    }
     public int getWidth() {
         return width;
     }

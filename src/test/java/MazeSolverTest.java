@@ -15,9 +15,8 @@ import com.example.Solvers;
 import com.example.Vertex;
 
 public class MazeSolverTest {
-    private int width = 3;
-    private int height = 3;
-    private BitMaze maze = new MazeGenerator(width, height, Generators.RECURSIVE_BACKTRACKER).getMap();
+    private int width = 31;
+    private int height = 26;
     private Vertex start = new Vertex(0, 0);
     private Vertex end = new Vertex(width - 1, height - 1);
     private MazeSolver solver = new MazeSolver();
@@ -26,12 +25,16 @@ public class MazeSolverTest {
     @EnumSource(Solvers.class)
     public void testSolver(Solvers alg) {
         System.out.println(alg.toString());
-        List<Vertex> path = solver.solve(maze, start, end, alg);
-        assertNotNull(path, "Couldn't solve maze using " + alg.toString());
-        assertTrue(path.get(0).equals(start), "First vertex doesn't equal start vertex");
-        assertTrue(path.get(path.size() - 1).equals(end), "Last vertex doesn't equal end vertex");
-        for (int i = 0; i < path.size() - 1; i++) {
-            assertFalse(maze.hasWall(path.get(i), path.get(i + 1)), "A wall exists between the two vertices");
-        }
+        for (int n = 0; n < 100; n++) {
+            BitMaze maze = new MazeGenerator(width, height, Generators.RECURSIVE_BACKTRACKER).getMap();
+            List<Vertex> path = solver.solve(maze, start, end, alg);
+            assertNotNull(path, "Couldn't solve maze using " + alg.toString());
+            assertTrue(path.get(0).equals(start), "First vertex doesn't equal start vertex");
+            assertTrue(path.get(path.size() - 1).equals(end), "Last vertex doesn't equal end vertex");
+            for (int i = 0; i < path.size() - 1; i++) {
+                assertFalse(maze.hasWall(path.get(i), path.get(i + 1)), "A wall exists between the two vertices");
+            }
     }
+
+}
 }
