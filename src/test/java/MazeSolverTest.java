@@ -27,7 +27,7 @@ public class MazeSolverTest {
         System.out.println(alg.toString());
         for (int n = 0; n < 100; n++) {
             BitMaze maze = new MazeGenerator(width, height, Generators.RECURSIVE_BACKTRACKER).getMap();
-            List<Vertex> path = solver.solve(maze, start, end, alg);
+            List<Vertex> path = solver.solve(maze, start, end, alg).path;
             assertNotNull(path, "Couldn't solve maze using " + alg.toString());
             assertTrue(path.get(0).equals(start), "First vertex doesn't equal start vertex");
             assertTrue(path.get(path.size() - 1).equals(end), "Last vertex doesn't equal end vertex");

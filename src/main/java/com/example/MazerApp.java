@@ -1,7 +1,5 @@
 package com.example;
 
-import java.util.List;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -28,7 +26,7 @@ public class MazerApp extends Application {
     private MazeGenerator gen = null;
     private MazeSolver solver = new MazeSolver();
     private GraphicsContext g;
-    private List<Vertex> path = null;
+    private SolverResult solution = null;
     private Vertex start, end;
     private Spinner<Integer> startXSpinner = new Spinner<>(0, 2, 0);
     private Spinner<Integer> startYSpinner = new Spinner<>(0, 2, 0);
@@ -63,13 +61,17 @@ public class MazerApp extends Application {
 
     }
 
-    private void renderSolution(List<Vertex> newPath) {
-        if (path != null) {
+    private void renderSolution(SolverResult newSolution) {
+        if (solution != null) {
             g.setFill(Color.BLACK);
-            path.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+            solution.visited
+                    .forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
         }
+        g.setFill(Color.YELLOW);
+        newSolution.visited
+                .forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
         g.setFill(Color.GREEN);
-        newPath.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+        newSolution.path.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
         g.setFill(Color.BLUE);
         g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
         g.setFill(Color.FUCHSIA);
@@ -158,9 +160,9 @@ public class MazerApp extends Application {
             start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
             end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
             Solvers alg = Solvers.valueOf(solAlgs.getValue());
-            List<Vertex> solPath = solver.solve(gen.getMap(),start,end, alg);
-            renderSolution(solPath);
-            path = solPath;
+            SolverResult solResult = solver.solve(gen.getMap(), start, end, alg);
+            renderSolution(solResult);
+            solution = solResult;
         });
         vBox.getChildren().addAll(
                 new Label("Start X"), startXSpinner,

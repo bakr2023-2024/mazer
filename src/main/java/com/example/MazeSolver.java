@@ -11,7 +11,7 @@ import java.util.Stack;
 import java.util.function.ToIntFunction;
 
 public class MazeSolver {
-    public List<Vertex> solve(BitMaze maze, Vertex start, Vertex end, Solvers alg) {
+    public SolverResult solve(BitMaze maze, Vertex start, Vertex end, Solvers alg) {
         switch (alg) {
             case DFS:
                 return dfs(maze, start, end);
@@ -44,7 +44,7 @@ public class MazeSolver {
             path.put(curr, new Pair(prev, path.get(prev).getDistance() + 1));
     }
 
-    private List<Vertex> dfs(BitMaze maze, Vertex start, Vertex end) {
+    private SolverResult dfs(BitMaze maze, Vertex start, Vertex end) {
         Stack<Vertex> stack = new Stack<>();
         HashSet<Vertex> visited = new HashSet<>();
         HashMap<Vertex, Pair> path = new HashMap<>();
@@ -54,7 +54,7 @@ public class MazeSolver {
             Vertex curr = stack.peek();
             visited.add(curr);
             if (curr.equals(end))
-                return constructPath(path, start, end);
+                return new SolverResult(visited, constructPath(path, start, end));
             var neighbor = Utils.getRandomVtx(
                     curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)));
             if (neighbor != null) {
@@ -66,7 +66,7 @@ public class MazeSolver {
         return null;
     }
 
-    private List<Vertex> bfs(BitMaze maze, Vertex start, Vertex end) {
+    private SolverResult bfs(BitMaze maze, Vertex start, Vertex end) {
         Queue<Vertex> queue = new LinkedList<>();
         queue.add(start);
         HashSet<Vertex> visited = new HashSet<>();
@@ -76,7 +76,7 @@ public class MazeSolver {
             Vertex curr = queue.poll();
             visited.add(curr);
             if (curr.equals(end))
-                return constructPath(path, start, end);
+                return new SolverResult(visited, constructPath(path, start, end));
             curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(v, curr)).forEach(n -> {
                 visited.add(n);
                 queue.add(n);
@@ -86,7 +86,7 @@ public class MazeSolver {
         return null;
     }
 
-    private List<Vertex> aStar(BitMaze maze, Vertex start, Vertex end) {
+    private SolverResult aStar(BitMaze maze, Vertex start, Vertex end) {
         HashMap<Vertex, Pair> path = new HashMap<>();
         path.put(start, new Pair(start, 0));
         HashMap<Vertex, Integer> heuristic = new HashMap<>();
@@ -107,7 +107,7 @@ public class MazeSolver {
             Vertex curr = pq.poll();
             visited.add(curr);
             if (curr.equals(end))
-                return constructPath(path, start, end);
+                return new SolverResult(visited, constructPath(path, start, end));
             curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)).forEach(n -> {
                 relaxEdge(path, n, curr);
                 visited.add(n);
@@ -117,7 +117,7 @@ public class MazeSolver {
         return null;
     }
 
-    private List<Vertex> best(BitMaze maze, Vertex start, Vertex end) {
+    private SolverResult best(BitMaze maze, Vertex start, Vertex end) {
         HashMap<Vertex, Pair> path = new HashMap<>();
         path.put(start, new Pair(start, 0));
         HashMap<Vertex, Integer> heuristic = new HashMap<>();
@@ -134,7 +134,7 @@ public class MazeSolver {
             Vertex curr = pq.poll();
             visited.add(curr);
             if (curr.equals(end))
-                return constructPath(path, start, end);
+                return new SolverResult(visited, constructPath(path, start, end));
             curr.getNeighbors(v -> maze.inbounds(v) && !visited.contains(v) && !maze.hasWall(curr, v)).forEach(n -> {
                 relaxEdge(path, n, curr);
                 visited.add(n);
@@ -144,9 +144,11 @@ public class MazeSolver {
         return null;
     }
 
-    private List<Vertex> tremaux(BitMaze maze, Vertex start, Vertex end) {
+    private SolverResult tremaux(BitMaze maze, Vertex start, Vertex end) {
         HashMap<Edge, Integer> marks = new HashMap<>();
         HashMap<Vertex, Pair> path = new HashMap<>();
+        HashSet<Vertex> visited = new HashSet<>();
+        visited.add(start);
         path.put(start, new Pair(start, 0));
         Vertex curr = start;
         Vertex prev = start;
@@ -175,7 +177,8 @@ public class MazeSolver {
             }
             marks.put(prevEdge, marks.getOrDefault(prevEdge, 0) + 1);
             relaxEdge(path, curr, prev);
+            visited.add(prev);
         }
-        return constructPath(path, start, end);
+        return new SolverResult(visited, constructPath(path, start, end));
     }
 }
