@@ -1,20 +1,25 @@
 package com.example;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class MazeGenerator {
-    private final BitMaze map;
-    private final int width, height;
-    private final Random r;
-    public MazeGenerator(int width, int height, Generators alg) {
+    private BitMaze map = null;
+    private int width, height;
+    private Consumer<Vertex> drawCell = null;
+    private Random r;
+    public static boolean stop = false;
+
+    public void start(int width, int height, Generators alg) {
+        stop = false;
         this.width = width;
         this.height = height;
         this.map = new BitMaze(width, height);
@@ -57,8 +62,25 @@ public class MazeGenerator {
         }
     }
 
+    public void start(int width, int height, Generators alg, Consumer<Vertex> drawCell) {
+        this.drawCell = drawCell;
+        start(width, height, alg);
+    }
+
+    private void renderCell(Vertex v) {
+        try {
+            drawCell.accept(v);
+            Thread.sleep(MazerApp.genDelay);
+        } catch (Exception e) {
+        }
+    }
+
     public void printMap() {
         map.printMaze();
+    }
+
+    public int getCell(Vertex v) {
+        return map.getMap()[v.y][v.x];
     }
 
     public int getWidth() {
@@ -102,12 +124,16 @@ public class MazeGenerator {
         Stack<Vertex> stack = new Stack<>();
         HashSet<Vertex> visited = new HashSet<>();
         stack.add(curr);
-        while (!stack.isEmpty()) {
+        while (!stack.isEmpty() && !stop) {
             curr = stack.peek();
             visited.add(curr);
             var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v) && !visited.contains(v)));
             if (neighbor != null) {
                 map.clearWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
                 stack.add(neighbor);
             } else
                 stack.pop();
@@ -119,8 +145,16 @@ public class MazeGenerator {
         Collections.shuffle(edges);
         DisjointSet ds = new DisjointSet(width, height);
         for (Edge e : edges) {
-            if (ds.union(e.getV1(), e.getV2()))
+            if (stop)
+                return;
+            if (ds.union(e.getV1(), e.getV2())) {
                 map.clearWall(e.getV1(), e.getV2());
+                if (drawCell != null) {
+                    renderCell(e.getV1());
+                    renderCell(e.getV2());
+                }
+            }
+
         }
     }
 
@@ -130,7 +164,7 @@ public class MazeGenerator {
         HashSet<Vertex> in = new HashSet<>();
         in.add(start);
         List<Vertex> frontier = new ArrayList<>(start.getNeighbors(v -> map.inbounds(v)));
-        while (!frontier.isEmpty()) {
+        while (!frontier.isEmpty() && !stop) {
             Vertex curr = frontier.remove(r.nextInt(frontier.size()));
             var neighbors = curr.getNeighbors(v -> map.inbounds(v) && !frontier.contains(v));
             Collections.shuffle(neighbors);
@@ -141,8 +175,15 @@ public class MazeGenerator {
                 else
                     frontier.add(n);
             }
-            if (!inNeighbors.isEmpty())
-                map.clearWall(curr, inNeighbors.get(0));
+            if (!inNeighbors.isEmpty()) {
+                Vertex neighbor = inNeighbors.get(0);
+                map.clearWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
+
+            }
             in.add(curr);
         }
     }
@@ -153,10 +194,14 @@ public class MazeGenerator {
         Vertex curr = vertices.remove(r.nextInt(vertices.size()));
         visited.add(curr);
         int n = width * height;
-        while (visited.size() < n) {
+        while (visited.size() < n && !stop) {
             var neighbor = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v)));
             if (!visited.contains(neighbor)) {
                 map.clearWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
                 visited.add(neighbor);
             }
             curr = neighbor;
@@ -170,18 +215,22 @@ public class MazeGenerator {
         ust.add(vertices.remove(r.nextInt(vertices.size())));
         HashMap<Vertex, Vertex> path = new HashMap<>();
         int n = width * height;
-        while (ust.size() < n) {
+        while (ust.size() < n && !stop) {
             Vertex curr = vertices.remove(r.nextInt(vertices.size()));
             Vertex start = curr;
-            while (!ust.contains(curr)) {
+            while (!ust.contains(curr) && !stop) {
                 var next = Utils.getRandomVtx(curr.getNeighbors(v -> map.inbounds(v)));
                 path.put(curr, next);
                 curr = next;
             }
-            while (!start.equals(curr)) {
+            while (!start.equals(curr) && !stop) {
                 Vertex next = path.get(start);
                 ust.add(start);
                 map.clearWall(start, next);
+                if (drawCell != null) {
+                    renderCell(start);
+                    renderCell(next);
+                }
                 start = next;
             }
         }
@@ -194,19 +243,29 @@ public class MazeGenerator {
         Vertex curr = vertices.remove(r.nextInt(vertices.size()));
         visited.add(curr);
         int n = width * height;
-        while (visited.size() < n) {
+        while (visited.size() < n && !stop) {
             var neighbors = curr.getNeighbors(v -> map.inbounds(v) && !visited.contains(v));
             if (!neighbors.isEmpty()) {
                 var neighbor = neighbors.get(r.nextInt(neighbors.size()));
                 map.clearWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
                 curr = neighbor;
             } else {
                 for (Vertex vtx : vertices) {
+                    if (stop)
+                        return;
                     neighbors = vtx.getNeighbors(v -> map.inbounds(v) && visited.contains(v));
                     if (!neighbors.isEmpty()) {
                         var neighbor = neighbors.get(r.nextInt(neighbors.size()));
                         curr = vtx;
                         map.clearWall(curr, neighbor);
+                        if (drawCell != null) {
+                            renderCell(curr);
+                            renderCell(neighbor);
+                        }
                         break;
                     }
                 }
@@ -222,7 +281,7 @@ public class MazeGenerator {
         set.add(curr);
         HashSet<Vertex> visited = new HashSet<>();
         visited.add(curr);
-        while (!set.isEmpty()) {
+        while (!set.isEmpty() && !stop) {
             int rand = r.nextInt(3);
             int choice = rand == 0 ? 0 : rand == 1 ? r.nextInt(set.size()) : set.size() - 1;
             curr = set.get(choice);
@@ -230,6 +289,11 @@ public class MazeGenerator {
             if (!neighbors.isEmpty()) {
                 Vertex neighbor = neighbors.get(r.nextInt(neighbors.size()));
                 map.clearWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
+
                 visited.add(neighbor);
                 set.add(neighbor);
             } else
@@ -238,25 +302,39 @@ public class MazeGenerator {
     }
 
     private void recursiveDivider(int sx, int sy, int ex, int ey) {
-        if (ex - sx < 1 || ey - sy < 1)
+        if (ex - sx < 1 || ey - sy < 1 || stop)
             return;
         if (ex - sx > ey - sy) {
             int wall = r.nextInt(ex - sx) + sx;
             int gap = r.nextInt(ey - sy + 1) + sy;
-            for (int y = sy; y <= ey; y++) {
+            for (int y = sy; y <= ey && !stop; y++) {
                 if (y == gap)
                     continue;
-                map.setWall(new Vertex(wall, y), new Vertex(wall + 1, y));
+                Vertex curr = new Vertex(wall, y);
+                Vertex neighbor = new Vertex(wall + 1, y);
+                map.setWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
+
             }
             recursiveDivider(sx, sy, wall, ey);
             recursiveDivider(wall + 1, sy, ex, ey);
         } else {
             int wall = r.nextInt(ey - sy) + sy;
             int gap = r.nextInt(ex - sx + 1) + sx;
-            for (int x = sx; x <= ex; x++) {
+            for (int x = sx; x <= ex && !stop; x++) {
                 if (x == gap)
                     continue;
-                map.setWall(new Vertex(x, wall), new Vertex(x, wall + 1));
+                Vertex curr = new Vertex(x, wall);
+                Vertex neighbor = new Vertex(x, wall + 1);
+                map.setWall(curr, neighbor);
+                if (drawCell != null) {
+                    renderCell(curr);
+                    renderCell(neighbor);
+                }
+
             }
             recursiveDivider(sx, sy, ex, wall);
             recursiveDivider(sx, wall + 1, ex, ey);
@@ -265,13 +343,19 @@ public class MazeGenerator {
 
     private void eller() {
         DisjointSet ds = new DisjointSet(width, height);
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width - 1; x++) {
+        for (int y = 0; y < height && !stop; y++) {
+            for (int x = 0; x < width - 1 && !stop; x++) {
                 boolean cond = y < height - 1 ? r.nextBoolean() : true;
                 Vertex curr = new Vertex(x, y);
                 Vertex neighbor = new Vertex(x + 1, y);
-                if (cond && ds.union(curr, neighbor))
+                if (cond && ds.union(curr, neighbor)) {
                     map.clearWall(curr, neighbor);
+                    if (drawCell != null) {
+                        renderCell(curr);
+                        renderCell(neighbor);
+                    }
+
+                }
             }
             if (y < height - 1) {
                 final int fy = y;
@@ -280,11 +364,17 @@ public class MazeGenerator {
                         .forEach((parent, members) -> {
                             int nSamples = r.nextInt(members.size()) + 1;
                             Collections.shuffle(members);
-                            for (int i = 0; i < nSamples; i++) {
+                            for (int i = 0; i < nSamples && !stop; i++) {
                                 Vertex curr = members.remove(r.nextInt(members.size()));
                                 Vertex neighbor = curr.add(0, 1);
-                                if (ds.union(curr, neighbor))
+                                if (ds.union(curr, neighbor)) {
                                     map.clearWall(curr, neighbor);
+                                    if (drawCell != null) {
+                                        renderCell(curr);
+                                        renderCell(neighbor);
+                                    }
+
+                                }
                             }
                         });
             }
@@ -292,32 +382,61 @@ public class MazeGenerator {
     }
 
     private void binaryTree() {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height && !stop; y++) {
+            for (int x = 0; x < width && !stop; x++) {
+                Vertex curr = new Vertex(x, y);
+                Vertex neighbor = null;
                 if (x < width - 1 && y < height - 1)
-                    map.clearWall(new Vertex(x, y), r.nextBoolean() ? new Vertex(x + 1, y) : new Vertex(x, y + 1));
+                    neighbor = r.nextBoolean() ? new Vertex(x + 1, y) : new Vertex(x, y + 1);
                 else if (x == width - 1 && y < height - 1)
-                    map.clearWall(new Vertex(x, y), new Vertex(x, y + 1));
+                    neighbor = new Vertex(x, y + 1);
                 else if (y == height - 1 && x < width - 1)
-                    map.clearWall(new Vertex(x, y), new Vertex(x + 1, y));
+                    neighbor = new Vertex(x + 1, y);
+                if (neighbor != null) {
+                    map.clearWall(curr, neighbor);
+                    if (drawCell != null) {
+                        renderCell(curr);
+                        renderCell(neighbor);
+                    }
+                }
+
             }
         }
     }
 
     private void sidewinder() {
         List<Vertex> run = new ArrayList<>();
-        for (int y = 0; y < height - 1; y++) {
-            for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height - 1 && !stop; y++) {
+            for (int x = 0; x < width && !stop; x++) {
                 run.add(new Vertex(x, y));
                 if (x == width - 1 || r.nextBoolean()) {
                     Vertex curr = run.get(r.nextInt(run.size()));
-                    map.clearWall(curr, curr.add(0, 1));
+                    Vertex neighbor = curr.add(0, 1);
+                    map.clearWall(curr, neighbor);
+                    if (drawCell != null) {
+                        renderCell(curr);
+                        renderCell(neighbor);
+                    }
                     run.clear();
-                } else
-                    map.clearWall(new Vertex(x, y), new Vertex(x + 1, y));
+                } else {
+                    Vertex curr = new Vertex(x, y);
+                    Vertex neighbor = new Vertex(x + 1, y);
+                    map.clearWall(curr, neighbor);
+                    if (drawCell != null) {
+                        renderCell(curr);
+                        renderCell(neighbor);
+                    }
+                }
             }
         }
-        for (int x = 0; x < width - 1; x++)
-            map.clearWall(new Vertex(x, height - 1), new Vertex(x + 1, height - 1));
+        for (int x = 0; x < width - 1 && !stop; x++) {
+            Vertex curr = new Vertex(x, height - 1);
+            Vertex neighbor = new Vertex(x + 1, height - 1);
+            map.clearWall(curr, neighbor);
+            if (drawCell != null) {
+                renderCell(curr);
+                renderCell(neighbor);
+            }
+        }
     }
 }
