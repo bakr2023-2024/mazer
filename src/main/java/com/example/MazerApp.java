@@ -29,11 +29,13 @@ public class MazerApp extends Application {
     private MazeSolver solver = new MazeSolver();
     private GraphicsContext g;
     private List<Vertex> path = null;
-     private       Spinner<Integer> startXSpinner;
-       private Spinner<Integer> startYSpinner;
-       private Spinner<Integer> endXSpinner;
-      private  Spinner<Integer> endYSpinner;
-      private void setSpinners(int maxX,int maxY){
+    private Vertex start, end;
+    private Spinner<Integer> startXSpinner = new Spinner<>(0, 2, 0);
+    private Spinner<Integer> startYSpinner = new Spinner<>(0, 2, 0);
+    private Spinner<Integer> endXSpinner = new Spinner<>(0, 2, 2);
+    private Spinner<Integer> endYSpinner = new Spinner<>(0, 2, 2);
+
+    private void setSpinners(int maxX, int maxY) {
         startXSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxX, 0));
         startYSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxY, 0));
         endXSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxX, maxX));
@@ -68,6 +70,10 @@ public class MazerApp extends Application {
         }
         g.setFill(Color.GREEN);
         newPath.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+        g.setFill(Color.BLUE);
+        g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        g.setFill(Color.FUCHSIA);
+        g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
     }
     private VBox createGeneratorControls() {
         VBox vBox = new VBox();
@@ -86,16 +92,23 @@ public class MazerApp extends Application {
             int mapWidth = widthSpinner.getValue();
             int mapHeight = heightSpinner.getValue();
             setSpinners(mapWidth-1, mapHeight-1);
+            start = new Vertex(0, 0);
+            end = new Vertex(mapWidth - 1, mapHeight - 1);
             Generators alg = Generators.valueOf(genAlgs.getValue());
             gen = new MazeGenerator(mapWidth, mapHeight, alg);
             cellSize = Math.min(g.getCanvas().getWidth() / mapWidth,
                             g.getCanvas().getHeight() / mapHeight);
             renderMaze();
+            g.setFill(Color.BLUE);
+            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            g.setFill(Color.FUCHSIA);
+            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
         });
         vBox.getChildren().addAll(
                 new Label("Width"), widthSpinner,
                 new Label("Height"), heightSpinner,
                 new Label("Generation Algorithms"), genAlgs, genBtn);
+        genBtn.fire();
         return vBox;
     }
 
@@ -103,10 +116,34 @@ public class MazerApp extends Application {
         VBox vBox = new VBox();
         vBox.setSpacing(5);
         vBox.setAlignment(Pos.CENTER);
-        startXSpinner = new Spinner<>(0,MAX_N-1,0);
-        startYSpinner = new Spinner<>(0,MAX_N-1,0);
-        endXSpinner = new Spinner<>(0,MAX_N-1,MAX_N-1);
-        endYSpinner = new Spinner<>(0,MAX_N-1,MAX_N-1);
+        startXSpinner.valueProperty().addListener((e, oldV, newV) -> {
+            g.setFill(Color.BLACK);
+            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            start.x = newV;
+            g.setFill(Color.BLUE);
+            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
+        startYSpinner.valueProperty().addListener((e, oldV, newV) -> {
+            g.setFill(Color.BLACK);
+            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            start.y = newV;
+            g.setFill(Color.BLUE);
+            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
+        endXSpinner.valueProperty().addListener((e, oldV, newV) -> {
+            g.setFill(Color.BLACK);
+            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            end.x = newV;
+            g.setFill(Color.FUCHSIA);
+            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
+        endYSpinner.valueProperty().addListener((e, oldV, newV) -> {
+            g.setFill(Color.BLACK);
+            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            end.y = newV;
+            g.setFill(Color.FUCHSIA);
+            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
         startXSpinner.setEditable(true);
         startYSpinner.setEditable(true);
         endXSpinner.setEditable(true);
@@ -118,8 +155,8 @@ public class MazerApp extends Application {
         Button solBtn = new Button("Solve");
         solBtn.setOnAction(e -> {
             if(gen==null)return;
-            Vertex start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
-            Vertex end =  new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
+            start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
+            end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
             Solvers alg = Solvers.valueOf(solAlgs.getValue());
             List<Vertex> solPath = solver.solve(gen.getMap(),start,end, alg);
             renderSolution(solPath);
@@ -138,13 +175,14 @@ public class MazerApp extends Application {
     public void start(Stage stage) throws Exception {
         BorderPane mainPane = new BorderPane();
         Button simulateBtn = new Button("Simulate");
+
+        Canvas canvas = new Canvas(0.6 * width, height);
+        Scene mainScene = new Scene(mainPane, width, height);
+        g = canvas.getGraphicsContext2D();
         VBox controlsPane = new VBox(10, new Label("Mazer"), createGeneratorControls(), createSolverControls(),
                 simulateBtn);
         controlsPane.setAlignment(Pos.CENTER);
         controlsPane.setPadding(new Insets(5, 5, 5, 5));
-        Canvas canvas = new Canvas(0.6 * width, height);
-        Scene mainScene = new Scene(mainPane, width, height);
-        g = canvas.getGraphicsContext2D();
         simulateBtn.setOnAction((e) -> {
             if (gen == null)
                 return;

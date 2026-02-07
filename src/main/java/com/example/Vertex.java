@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class Vertex {
-    public final int x, y;
+    public int x, y;
 
     public Vertex(int x, int y) {
         this.x = x;
