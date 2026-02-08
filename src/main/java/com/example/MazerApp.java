@@ -1,7 +1,6 @@
 package com.example;
 
 import java.util.function.Consumer;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -23,19 +22,20 @@ import javafx.stage.Stage;
 public class MazerApp extends Application {
     private final int MAX_N = 500;
     public static int genDelay = 10;
+    public static int solDelay = 10;
     private int width = 1280;
     private int height = 720;
     private double cellSize;
     private MazeGenerator gen = new MazeGenerator();
     private MazeSolver solver = new MazeSolver();
     private GraphicsContext g;
-    private SolverResult solution = null;
     private Vertex start, end;
     private Spinner<Integer> startXSpinner = new Spinner<>(0, 2, 0);
     private Spinner<Integer> startYSpinner = new Spinner<>(0, 2, 0);
     private Spinner<Integer> endXSpinner = new Spinner<>(0, 2, 2);
     private Spinner<Integer> endYSpinner = new Spinner<>(0, 2, 2);
-    private Thread genThread;
+    private Thread genThread = null;
+    private Thread solThread = null;
     private Consumer<Vertex> drawGenCell = (v) -> {
         Platform.runLater(() -> {
             int cell = gen.getCell(v);
@@ -52,6 +52,20 @@ public class MazerApp extends Application {
                 g.strokeLine(v.x * cellSize, v.y * cellSize, v.x * cellSize, (v.y + 1) * cellSize);
         });
     };
+    private Consumer<Vertex> drawSolCell = (v) -> {
+        Platform.runLater(() -> {
+            g.setFill(Color.RED);
+            g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
+        try {
+            Thread.sleep(solDelay);
+        } catch (Exception e) {
+        }
+        Platform.runLater(() -> {
+            g.setFill(Color.YELLOW);
+            g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        });
+    };
     private void setSpinners(int maxX, int maxY) {
         startXSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxX, 0));
         startYSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxY, 0));
@@ -61,7 +75,7 @@ public class MazerApp extends Application {
 
       private void clearMaze() {
           g.setFill(Color.BLACK);
-          g.fillRect(0, 0, g.getCanvas().getWidth(), g.getCanvas().getHeight());
+          g.fillRect(0, 0, g.getCanvas().getWidth(),g.getCanvas().getHeight());
       }
 
       private void renderMaze() {
@@ -88,17 +102,20 @@ public class MazerApp extends Application {
         g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
     }
 
-    private void renderSolution(SolverResult newSolution) {
-        if (solution != null) {
-            g.setFill(Color.BLACK);
-            solution.visited
-                    .forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
-        }
+    private void clearSolution() {
+        renderMaze();
+    }
+
+    private void renderSolution(SolverResult solution, boolean withVisited) {
+        if (solution == null)
+            return;
+        clearSolution();
+        if (withVisited) {
         g.setFill(Color.YELLOW);
-        newSolution.visited
-                .forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+        solution.visited.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+    }
         g.setFill(Color.GREEN);
-        newSolution.path.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+        solution.path.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
         g.setFill(Color.BLUE);
         g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
         g.setFill(Color.FUCHSIA);
@@ -138,7 +155,7 @@ public class MazerApp extends Application {
             start = new Vertex(0, 0);
             end = new Vertex(mapWidth - 1, mapHeight - 1);
             cellSize = Math.min(g.getCanvas().getWidth() / mapWidth, g.getCanvas().getHeight() / mapHeight);
-            clearMaze();
+            Platform.runLater(this::clearMaze);
             genThread = new Thread(() -> gen.start(mapWidth, mapHeight, alg, drawGenCell));
             genThread.start();
         });
@@ -155,10 +172,10 @@ public class MazerApp extends Application {
             end = new Vertex(mapWidth - 1, mapHeight - 1);
             cellSize = Math.min(g.getCanvas().getWidth() / mapWidth,
                     g.getCanvas().getHeight() / mapHeight);
-            clearMaze();
+            Platform.runLater(this::clearMaze);
             genThread = new Thread(() -> {
                 gen.start(mapWidth, mapHeight, alg, null);
-            renderMaze();
+                Platform.runLater(this::renderMaze);
             });
             genThread.start();
         });
@@ -211,21 +228,53 @@ public class MazerApp extends Application {
             solAlgs.getItems().add(sol.toString());
         solAlgs.setValue(Solvers.DFS.toString());
         Button solBtn = new Button("Solve");
+        Button animateBtn = new Button("Animate");
+        Button stopBtn = new Button("Stop");
+        stopBtn.setOnAction(e -> {
+            if (solThread != null) {
+                MazeSolver.stop = true;
+                solThread.interrupt();
+            }
+        });
+        animateBtn.setOnAction(e -> {
+            if (solThread != null) {
+                MazeSolver.stop = true;
+                solThread.interrupt();
+            }
+            if (gen == null)
+                return;
+            start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
+            end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
+            Solvers alg = Solvers.valueOf(solAlgs.getValue());
+            Platform.runLater(this::clearSolution);
+            solThread = new Thread(() -> {
+                SolverResult solResult = solver.solve(gen.getMap(), start, end, alg, drawSolCell);
+                Platform.runLater(() -> renderSolution(solResult, false));
+            });
+            solThread.start();
+        });
         solBtn.setOnAction(e -> {
+            if (solThread != null) {
+                MazeSolver.stop = true;
+                solThread.interrupt();
+            }
             if(gen==null)return;
             start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
             end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
             Solvers alg = Solvers.valueOf(solAlgs.getValue());
-            SolverResult solResult = solver.solve(gen.getMap(), start, end, alg);
-            renderSolution(solResult);
-            solution = solResult;
+            Platform.runLater(this::clearSolution);
+            solThread = new Thread(() -> {
+                SolverResult solResult = solver.solve(gen.getMap(), start, end, alg, null);
+                Platform.runLater(() -> renderSolution(solResult, true));
+            });
+            solThread.start();
         });
         vBox.getChildren().addAll(
                 new Label("Start X"), startXSpinner,
                                         new Label("Start Y"), startYSpinner,
                 new Label("End X"), endXSpinner,
                 new Label("End Y"), endYSpinner,
-                new Label("Solving Algorithms"), solAlgs, solBtn);
+                new Label("Solving Algorithms"), solAlgs, solBtn, animateBtn, stopBtn);
         return vBox;
     }
 
@@ -244,7 +293,7 @@ public class MazerApp extends Application {
         simulateBtn.setOnAction((e) -> {
             if (gen == null)
                 return;
-            RayCasterView rcv = new RayCasterView(gen.getMap().getMap(), 0, 0, gen.getWidth() - 1, gen.getHeight() - 1, width, height,
+            RayCasterView rcv = new RayCasterView(gen.getMap().getMap(), start.x, start.y, end.x, end.y, width, height,
                     () -> {
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);

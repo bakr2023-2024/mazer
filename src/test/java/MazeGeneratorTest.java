@@ -14,7 +14,7 @@ import com.example.Utils;
 import com.example.Vertex;
 
 public class MazeGeneratorTest {
-    private MazeGenerator gen;
+    private MazeGenerator gen = new MazeGenerator();
     private int width = 3, height = 3;
 
     public int countEdges() {
@@ -58,7 +58,7 @@ public class MazeGeneratorTest {
     void testMethodWithEachEnumValue(Generators alg) {
         System.out.println(alg.toString());
         for (int i = 0; i < 100; i++) {
-        gen = new MazeGenerator(width, height, alg);
+            gen.start(width, height, alg);
         assertEquals(width * height - 1, countEdges(), "incorrect edge count: " + alg.toString());
         assertTrue(dfs(), "unsolvable maze: " + alg.toString());
     }

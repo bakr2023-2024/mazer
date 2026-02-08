@@ -30,6 +30,7 @@ public class BitMaze {
             }
         }
     }
+
     public int getWidth() {
         return width;
     }

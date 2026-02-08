@@ -19,6 +19,7 @@ public class MazeSolverTest {
     private int height = 26;
     private Vertex start = new Vertex(0, 0);
     private Vertex end = new Vertex(width - 1, height - 1);
+    private MazeGenerator gen = new MazeGenerator();
     private MazeSolver solver = new MazeSolver();
 
     @ParameterizedTest
@@ -26,7 +27,8 @@ public class MazeSolverTest {
     public void testSolver(Solvers alg) {
         System.out.println(alg.toString());
         for (int n = 0; n < 100; n++) {
-            BitMaze maze = new MazeGenerator(width, height, Generators.RECURSIVE_BACKTRACKER).getMap();
+            gen.start(width,height,Generators.RECURSIVE_BACKTRACKER);
+            BitMaze maze = gen.getMap();
             List<Vertex> path = solver.solve(maze, start, end, alg).path;
             assertNotNull(path, "Couldn't solve maze using " + alg.toString());
             assertTrue(path.get(0).equals(start), "First vertex doesn't equal start vertex");
