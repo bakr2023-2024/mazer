@@ -309,6 +309,7 @@ public class MazerApp extends Application {
         mainPane.setCenter(canvas);
         mainScene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setScene(mainScene);
+        stage.setTitle("Mazer");
         stage.show();
     }
 
