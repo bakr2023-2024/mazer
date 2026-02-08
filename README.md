@@ -49,13 +49,13 @@ MazerApp is a JavaFX-based interactive maze generator and solver. It allows user
 
 ## Screenshots
 
-![Generated maze example](images/mazer1.png)
+![Generated maze example](images/mazer1.PNG)
 
-![Maze solution example](images/mazer2.png)
+![Maze solution example](images/mazer2.PNG)
 
-![RayCaster 3D perspective](images/mazer3.png)
+![RayCaster 3D perspective](images/mazer3.PNG)
 
-![RayCaster 2D map view](images/mazer4.png)
+![RayCaster 2D map view](images/mazer4.PNG)
 
 ---
 
