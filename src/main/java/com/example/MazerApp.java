@@ -35,13 +35,19 @@ public class MazerApp extends Application {
     private Spinner<Integer> startYSpinner = new Spinner<>(0, 2, 0);
     private Spinner<Integer> endXSpinner = new Spinner<>(0, 2, 2);
     private Spinner<Integer> endYSpinner = new Spinner<>(0, 2, 2);
+    private Spinner<Integer> widthSpinner = new Spinner<>(3, MAX_N, 3);
+    private Spinner<Integer> heightSpinner = new Spinner<>(3, MAX_N, 3);
+    private int mapWidth = 3;
+    private int mapHeight = 3;
+    private ChoiceBox<String> genAlgs;
+    private ChoiceBox<String> solAlgs;
     private Thread genThread = null;
     private Thread solThread = null;
     private Consumer<Vertex> drawGenCell = (v) -> {
         Platform.runLater(() -> {
-            int cell = gen.getCell(v);
             g.setFill(Color.BLACK);
             g.fillRect(v.x * cellSize, v.y * cellSize, cellSize, cellSize);
+            int cell = gen.getCell(v);
             g.setStroke(Color.WHITE);
             if ((cell & 1 << BitMaze.TOP) != 0)
                 g.strokeLine(v.x * cellSize, v.y * cellSize, (v.x + 1) * cellSize, v.y * cellSize);
@@ -53,20 +59,18 @@ public class MazerApp extends Application {
                 g.strokeLine(v.x * cellSize, v.y * cellSize, v.x * cellSize, (v.y + 1) * cellSize);
         });
     };
+
     private Consumer<Vertex> drawSolCell = (v) -> {
-        Platform.runLater(() -> {
-            g.setFill(Color.RED);
-            g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1);
-        });
+        Platform.runLater(() -> renderVertex(v, Color.RED));
         try {
             Thread.sleep(solDelay);
         } catch (Exception e) {
         }
-        Platform.runLater(() -> {
-            g.setFill(Color.YELLOW);
-            g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1);
-        });
+        Platform.runLater(() ->
+
+        renderVertex(v, v.equals(start) ? Color.BLUE : Color.YELLOW));
     };
+
     private void setSpinners(int maxX, int maxY) {
         startXSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxX, 0));
         startYSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0,maxY, 0));
@@ -85,8 +89,8 @@ public class MazerApp extends Application {
         int[][] maze = gen.getMap().getMap();
         clearMaze();
         g.setStroke(Color.WHITE);
-        for (int y = 0; y < gen.getHeight(); y++) {
-            for (int x = 0; x < gen.getWidth(); x++) {
+        for (int y = 0; y < mapHeight; y++) {
+            for (int x = 0; x < mapWidth; x++) {
                 if ((maze[y][x] & 1 << BitMaze.TOP) != 0)
                     g.strokeLine(x * cellSize, y * cellSize, (x + 1) * cellSize, y * cellSize);
                 if ((maze[y][x] & 1 << BitMaze.RIGHT) != 0)
@@ -97,89 +101,72 @@ public class MazerApp extends Application {
                     g.strokeLine(x * cellSize, y * cellSize, x * cellSize, (y + 1) * cellSize);
             }
         }
-        g.setFill(Color.BLUE);
-        g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
-        g.setFill(Color.FUCHSIA);
-        g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+        renderVertex(start, Color.BLUE);
+        renderVertex(end, Color.FUCHSIA);
     }
 
-    private void clearSolution() {
-        renderMaze();
+    private void renderVertex(Vertex v, Color color) {
+        g.setFill(color);
+        g.fillRect(v.x * cellSize + 1,
+                v.y * cellSize + 1,
+                cellSize - 1,
+                cellSize - 1);
     }
 
-    private void renderSolution(SolverResult solution, boolean withVisited) {
+    private void renderSolution(SolverResult solution) {
         if (solution == null)
             return;
-        clearSolution();
-        if (withVisited) {
-        g.setFill(Color.YELLOW);
-        solution.visited.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
+        renderMaze();
+        solution.visited.forEach(v -> renderVertex(v, Color.YELLOW));
+        solution.path.forEach(v -> renderVertex(v, Color.GREEN));
+        renderVertex(start, Color.BLUE);
+        renderVertex(end, Color.FUCHSIA);
     }
-        g.setFill(Color.GREEN);
-        solution.path.forEach(v -> g.fillRect(v.x * cellSize + 1, v.y * cellSize + 1, cellSize - 1, cellSize - 1));
-        g.setFill(Color.BLUE);
-        g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
-        g.setFill(Color.FUCHSIA);
-        g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+
+    private void stopGenTask() {
+        if (genThread != null) {
+            MazeGenerator.stop = true;
+            genThread.interrupt();
+        }
+    }
+
+    private void startGenTask(boolean animate) {
+        if (genThread != null) {
+            MazeGenerator.stop = true;
+            genThread.interrupt();
+        }
+        mapWidth = widthSpinner.getValue();
+        mapHeight = heightSpinner.getValue();
+        Generators alg = Generators.valueOf(genAlgs.getValue());
+        setSpinners(mapWidth - 1, mapHeight - 1);
+        start = new Vertex(0, 0);
+        end = new Vertex(mapWidth - 1, mapHeight - 1);
+        cellSize = Math.min(g.getCanvas().getWidth() / mapWidth, g.getCanvas().getHeight() / mapHeight);
+        Platform.runLater(this::clearMaze);
+        genThread = new Thread(() -> {
+            gen.start(mapWidth, mapHeight, alg, animate ? drawGenCell : null);
+            if (!animate)
+                renderMaze();
+        });
+        genThread.start();
     }
 
     private VBox createGeneratorControls() {
         VBox vBox = new VBox();
         vBox.setSpacing(5);
         vBox.setAlignment(Pos.CENTER);
-        Spinner<Integer> widthSpinner = new Spinner<>(3, MAX_N, 3);
         widthSpinner.setEditable(true);
-        Spinner<Integer> heightSpinner = new Spinner<>(3, MAX_N, 3);
         heightSpinner.setEditable(true);
-        ChoiceBox<String> genAlgs = new ChoiceBox<>();
+        genAlgs = new ChoiceBox<>();
         for (Generators gen : Generators.values())
             genAlgs.getItems().add(gen.toString());
         genAlgs.setValue(Generators.RECURSIVE_BACKTRACKER.toString());
         Button genBtn = new Button("Generate");
         Button animateBtn = new Button("Animate");
         Button stopBtn = new Button("Stop");
-        stopBtn.setOnAction(e -> {
-            if (genThread != null) {
-                MazeGenerator.stop = true;
-                genThread.interrupt();
-            }
-        });
-        animateBtn.setOnAction(e -> {
-            if (genThread != null) {
-                MazeGenerator.stop = true;
-                genThread.interrupt();
-            }
-            int mapWidth = widthSpinner.getValue();
-            int mapHeight = heightSpinner.getValue();
-            Generators alg = Generators.valueOf(genAlgs.getValue());
-            setSpinners(mapWidth - 1, mapHeight - 1);
-            start = new Vertex(0, 0);
-            end = new Vertex(mapWidth - 1, mapHeight - 1);
-            cellSize = Math.min(g.getCanvas().getWidth() / mapWidth, g.getCanvas().getHeight() / mapHeight);
-            Platform.runLater(this::clearMaze);
-            genThread = new Thread(() -> gen.start(mapWidth, mapHeight, alg, drawGenCell));
-            genThread.start();
-        });
-        genBtn.setOnAction(e -> {
-            if (genThread != null) {
-                MazeGenerator.stop = true;
-                genThread.interrupt();
-            }
-            int mapWidth = widthSpinner.getValue();
-            int mapHeight = heightSpinner.getValue();
-            Generators alg = Generators.valueOf(genAlgs.getValue());
-            setSpinners(mapWidth-1, mapHeight-1);
-            start = new Vertex(0, 0);
-            end = new Vertex(mapWidth - 1, mapHeight - 1);
-            cellSize = Math.min(g.getCanvas().getWidth() / mapWidth,
-                    g.getCanvas().getHeight() / mapHeight);
-            Platform.runLater(this::clearMaze);
-            genThread = new Thread(() -> {
-                gen.start(mapWidth, mapHeight, alg, null);
-                Platform.runLater(this::renderMaze);
-            });
-            genThread.start();
-        });
+        stopBtn.setOnAction(e -> stopGenTask());
+        animateBtn.setOnAction(e -> startGenTask(true));
+        genBtn.setOnAction(e -> startGenTask(false));
         vBox.getChildren().addAll(
                 new Label("Width"), widthSpinner,
                 new Label("Height"), heightSpinner,
@@ -188,88 +175,62 @@ public class MazerApp extends Application {
         return vBox;
     }
 
+    private void stopSolTask() {
+        if (solThread != null) {
+            MazeSolver.stop = true;
+            solThread.interrupt();
+        }
+    }
+
+    private void startSolTask(boolean animate) {
+        start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
+        end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
+        Solvers alg = Solvers.valueOf(solAlgs.getValue());
+        Platform.runLater(this::renderMaze);
+        solThread = new Thread(() -> {
+            SolverResult solResult = solver.solve(gen.getMap(), start, end, alg, animate ? drawSolCell : null);
+            Platform.runLater(() -> renderSolution(solResult));
+        });
+        solThread.start();
+    }
     private VBox createSolverControls() {
         VBox vBox = new VBox();
         vBox.setSpacing(5);
         vBox.setAlignment(Pos.CENTER);
         startXSpinner.valueProperty().addListener((e, oldV, newV) -> {
-            g.setFill(Color.BLACK);
-            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(start, Color.BLACK);
             start.x = newV;
-            g.setFill(Color.BLUE);
-            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(start, Color.BLUE);
         });
         startYSpinner.valueProperty().addListener((e, oldV, newV) -> {
-            g.setFill(Color.BLACK);
-            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(start, Color.BLACK);
             start.y = newV;
-            g.setFill(Color.BLUE);
-            g.fillRect(start.x * cellSize + 1, start.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(start, Color.BLUE);
         });
         endXSpinner.valueProperty().addListener((e, oldV, newV) -> {
-            g.setFill(Color.BLACK);
-            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(end, Color.BLACK);
             end.x = newV;
-            g.setFill(Color.FUCHSIA);
-            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(end, Color.FUCHSIA);
         });
         endYSpinner.valueProperty().addListener((e, oldV, newV) -> {
-            g.setFill(Color.BLACK);
-            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(end, Color.BLACK);
             end.y = newV;
-            g.setFill(Color.FUCHSIA);
-            g.fillRect(end.x * cellSize + 1, end.y * cellSize + 1, cellSize - 1, cellSize - 1);
+            renderVertex(end, Color.FUCHSIA);
         });
         startXSpinner.setEditable(true);
         startYSpinner.setEditable(true);
         endXSpinner.setEditable(true);
         endYSpinner.setEditable(true);
-        ChoiceBox<String> solAlgs = new ChoiceBox<>();
+        solAlgs = new ChoiceBox<>();
         for (Solvers sol : Solvers.values())
             solAlgs.getItems().add(sol.toString());
         solAlgs.setValue(Solvers.DFS.toString());
         Button solBtn = new Button("Solve");
         Button animateBtn = new Button("Animate");
         Button stopBtn = new Button("Stop");
-        stopBtn.setOnAction(e -> {
-            if (solThread != null) {
-                MazeSolver.stop = true;
-                solThread.interrupt();
-            }
-        });
-        animateBtn.setOnAction(e -> {
-            if (solThread != null) {
-                MazeSolver.stop = true;
-                solThread.interrupt();
-            }
-            if (gen == null)
-                return;
-            start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
-            end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
-            Solvers alg = Solvers.valueOf(solAlgs.getValue());
-            Platform.runLater(this::clearSolution);
-            solThread = new Thread(() -> {
-                SolverResult solResult = solver.solve(gen.getMap(), start, end, alg, drawSolCell);
-                Platform.runLater(() -> renderSolution(solResult, false));
-            });
-            solThread.start();
-        });
-        solBtn.setOnAction(e -> {
-            if (solThread != null) {
-                MazeSolver.stop = true;
-                solThread.interrupt();
-            }
-            if(gen==null)return;
-            start = new Vertex(startXSpinner.getValue(), startYSpinner.getValue());
-            end = new Vertex(endXSpinner.getValue(), endYSpinner.getValue());
-            Solvers alg = Solvers.valueOf(solAlgs.getValue());
-            Platform.runLater(this::clearSolution);
-            solThread = new Thread(() -> {
-                SolverResult solResult = solver.solve(gen.getMap(), start, end, alg, null);
-                Platform.runLater(() -> renderSolution(solResult, true));
-            });
-            solThread.start();
-        });
+        stopBtn.setOnAction(e -> stopSolTask());
+        animateBtn.setOnAction(e -> startSolTask(true));
+        solBtn.setOnAction(e -> startSolTask(false));
         vBox.getChildren().addAll(
                 new Label("Start X"), startXSpinner,
                                         new Label("Start Y"), startYSpinner,
@@ -325,6 +286,6 @@ public class MazerApp extends Application {
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }
